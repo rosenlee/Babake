@@ -17,40 +17,70 @@ int getRandom(int base)
 	return (int)randomVar;
 }
 
+
 class RandomFunc
 {
 public:
 	int operator()(int base)
 {
+	static 	int rand1 = time(0);
+//	cout << rand1<< endl;
+	srand(rand1);
+	//srand(time(0))	;
 	long randomVar = rand();
-	randomVar = randomVar % base;
+	rand1 = randomVar+base;
+	
+	// generate second random number
+	srand(rand1);
+	long 	randomVar2 = rand();
+	rand1 = randomVar2+base;
+	randomVar = (randomVar2 % randomVar + randomVar % randomVar2) % base;
 	return (int)randomVar;
 }
 
 };
 
-char *getRandomString(void)
+template<class RandomIt, class RandomFunc>
+void random_shuffle_local(RandomIt first, RandomIt last, RandomFunc &&r)
 {
+	typename std::iterator_traits<RandomIt>	::difference_type i,n;
+	n = last - first;
+
+	for (i = n - 1; i > 0; --i)
+	{
+		swap(first[i],first[(*r)(i+1)]);	
+	}
+}
+
+
+
 	static  char letters[]={'A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z',
 
 			'a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z'};
 
-	string temp(letters) ;
-	//cout << letters;
-
-	vector<char> let;
-	for (int i = 0; i < temp.size(); i ++)
+	static bool init = false;
+	static vector<char> let;
+char *getRandomString(void)
+{
+	if (false == init)
 	{
-		let.push_back(letters[i]);
-	}
+		string temp(letters) ;
+		//cout << letters;
 
+		for (int i = 0; i < temp.size(); i ++)
+		{
+			let.push_back(letters[i]);
+		}
+		init = true;
+
+	}
 //	random_device rd;
 //	mt19937 g(rd());
 
 	RandomFunc rf;
 
-//	random_shuffle(let.begin(), let.end(), &rf);
-	random_shuffle(let.begin(), let.end());
+	random_shuffle_local(let.begin(), let.end(), &rf);
+//	random_shuffle(let.begin(), let.end());
 	cout << endl;
 	copy(let.begin(),let.end(), ostream_iterator<char>(cout, ""));		
 	cout << endl;
@@ -75,9 +105,12 @@ int main()
 	}
 
 
-	getRandomString();
-
 	srand(time(0))	;
+	for (int j = 0; j < 15; j++)
+	{
+		getRandomString();
+	}
+
 	cout << "get random number:" ;
 	for (int i = 0; i < 225;i++)
 	{
