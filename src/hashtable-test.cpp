@@ -5,10 +5,17 @@
 #include <iostream>
 #include <cstdlib>
 #include <ctime>
+#include <stdio.h>
+#include <string.h>
+#include <stdarg.h>
 
 using namespace std;
 using namespace __gnu_cxx;
 
+#define MAX_STRING_LEN 52
+
+int hashFunc(char *str, int len);
+char *createFileName(char *str, int strLen, int num);
 
 int getRandom(int base)
 {
@@ -54,12 +61,13 @@ void random_shuffle_local(RandomIt first, RandomIt last, RandomFunc &&r)
 
 
 
-	static  char letters[]={'A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z',
+static  char letters[]={'A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z',
 
 			'a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z'};
 
-	static bool init = false;
-	static vector<char> let;
+static bool init = false;
+static vector<char> let;
+
 char *getRandomString(void)
 {
 	if (false == init)
@@ -81,17 +89,31 @@ char *getRandomString(void)
 
 	random_shuffle_local(let.begin(), let.end(), &rf);
 //	random_shuffle(let.begin(), let.end());
-	cout << endl;
-	copy(let.begin(),let.end(), ostream_iterator<char>(cout, ""));		
-	cout << endl;
+//	cout << endl;
+//	copy(let.begin(),let.end(), ostream_iterator<char>(cout, ""));		
+//	cout << endl;
 
-	return  NULL;
+	static char retString[MAX_STRING_LEN] = {};
+	for(int i = 0; i < MAX_STRING_LEN;i++)
+	{
+		retString[i] = let[rf(i+1)];	
+		//retString[i] = letters[rf(i+1)];	
+	}
+
+
+	return  retString;
 	//return  letters;
 
 }
 
-int main()
+int main(int argc, char** argv)
 {
+	int loop = 100;
+
+	if (argc > 1)
+	{
+		loop = (int)atoi(argv[1]);
+	}
 	hash_set<int> hs;
 	hs.insert(12);
 	hs.insert(13);
@@ -101,15 +123,18 @@ int main()
 	hs.insert(82);
 	for(hash_set<int>::iterator iter = hs.begin(); iter != hs.end(); ++iter )
 	{
-		cout << *iter << endl;
+	//	cout << *iter << endl;
+		cout << createFileName("hash",strlen("hash"),*iter)<< endl;
 	}
 
 
-	srand(time(0))	;
-	for (int j = 0; j < 15; j++)
-	{
-		getRandomString();
-	}
+//	srand(time(0))	;
+//	for (int j = 0; j < loop; j++)
+//	{
+//		cout << 	getRandomString() << endl; 
+//	}
+
+	return 0;
 
 	cout << "get random number:" ;
 	for (int i = 0; i < 225;i++)
@@ -121,3 +146,30 @@ int main()
 	return 0;
 }
 
+int hashFunc(char *str, int len)
+{
+	int sum = -1;
+
+	if (NULL != str && len > 0)
+	{
+		sum = 0; // reset  
+		for (int i = 0; i < len; i++)
+		{
+			sum += str[i] + i;// add the sequence
+		}
+	}	
+
+	return  sum;
+}
+
+char *createFileName(char *str, int strLen, int num)
+{
+	static char name[MAX_STRING_LEN] = {};
+	if (NULL != str && strLen > 0)
+	{
+		strncpy(name,str,strLen);
+		snprintf(&name[strLen], 5,"%d", num );
+	}
+
+	return name;
+}
