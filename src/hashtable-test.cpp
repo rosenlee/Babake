@@ -8,14 +8,23 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdarg.h>
+#include <map>
 
 using namespace std;
 using namespace __gnu_cxx;
 
 #define MAX_STRING_LEN 52
+#define	MAX_FILE_DESCRIPTION	200 
+#define	MAX_FILE_PATH	256	
+#define	DISTRIBUTION_PATH 	"./distribution/"
+#define SOURCE_FILE_PATH	"./random.txt"
 
+void testRandom(void);
 int hashFunc(char *str, int len);
-char *createFileName(char *str, int strLen, int num);
+char *createFileName(const char *str, int strLen, int num);
+
+bool distribution(FILE *sourceFile);
+FILE *getFileDescriptionFromHashTable( map<int, FILE*> *pHashFileMap , int key);
 
 int getRandom(int base)
 {
@@ -114,6 +123,7 @@ int main(int argc, char** argv)
 	{
 		loop = (int)atoi(argv[1]);
 	}
+
 	hash_set<int> hs;
 	hs.insert(12);
 	hs.insert(13);
@@ -134,8 +144,17 @@ int main(int argc, char** argv)
 //		cout << 	getRandomString() << endl; 
 //	}
 
+	FILE *pSource = fopen(SOURCE_FILE_PATH, "r");
+	if(NULL != pSource)
+	{
+		distribution(pSource);	
+	}
 	return 0;
 
+}
+
+void testRandom(void)
+{
 	cout << "get random number:" ;
 	for (int i = 0; i < 225;i++)
 	{
@@ -143,7 +162,6 @@ int main(int argc, char** argv)
 	}
 	cout << endl;
 	cout << "Random value on" << getRandom(255) << endl; 
-	return 0;
 }
 
 int hashFunc(char *str, int len)
@@ -159,17 +177,83 @@ int hashFunc(char *str, int len)
 		}
 	}	
 
-	return  sum;
+	return  sum % MAX_FILE_DESCRIPTION;	
 }
 
-char *createFileName(char *str, int strLen, int num)
+char *createFileName(const char *str, int strLen, int num)
 {
-	static char name[MAX_STRING_LEN] = {};
+	static char name[MAX_FILE_PATH] = {};
 	if (NULL != str && strLen > 0)
 	{
-		strncpy(name,str,strLen);
-		snprintf(&name[strLen], 5,"%d", num );
+		strcpy(name,DISTRIBUTION_PATH );
+		strcat(name,str);
+		sprintf(&name[strLen + strlen(DISTRIBUTION_PATH) ], "%d", num );
 	}
 
 	return name;
+}
+
+
+/*
+*	the main process for distribution
+*/
+bool distribution(FILE *sourceFile)
+{
+	if (NULL == sourceFile)
+	{
+		return false;
+	}
+
+	int maxLine = 100; // for test max num
+	size_t len = 0;
+	ssize_t read = 0;
+	char *line = NULL;
+	map<int, FILE*> hashFile;
+	while(maxLine >= 0 && (read = getline(&line, &len, sourceFile)) != -1)
+	{
+//		cout << "line num: " << maxLine << " size :" << read << ", " << line << " hash num: " << hashFunc(line, read)<<endl;
+		FILE* f= getFileDescriptionFromHashTable(&hashFile, hashFunc(line, read));
+		if (NULL != f)
+		{
+			fwrite(line, sizeof(char), read, f);	
+		}
+		/* the string will be discarded if there is no file for it*/
+		/// reduce calc
+		maxLine--;
+	}
+
+	hashFile.clear();
+	return true;	
+}
+
+/*
+* get a file description in map, if it does not exist, create one.
+*/
+FILE *getFileDescriptionFromHashTable( map<int, FILE*> *pHashFileMap , int key)
+{
+	FILE * ret = NULL;
+
+	if (NULL != pHashFileMap)
+	{
+		map<int, FILE*> :: iterator iter = pHashFileMap->find(key);
+		if (iter != pHashFileMap->end())	
+		{
+			// we found it
+			ret = iter->second;
+		}
+		else
+		{
+			//can not find it
+			if (pHashFileMap->size() < MAX_FILE_DESCRIPTION	)
+			{
+				ret = fopen(createFileName("hash",strlen("hash"), key), "a+");
+				if (NULL == ret)
+				{
+					cout << "create file failed" << endl;
+				}
+			}
+		}
+	}
+
+	return ret;
 }
