@@ -18,6 +18,7 @@ using namespace __gnu_cxx;
 #define	MAX_FILE_PATH	256	
 #define	DISTRIBUTION_PATH 	"./distribution/"
 #define SOURCE_FILE_PATH	"./random.txt"
+#define MAX_LINE		10000
 
 void testRandom(void);
 int hashFunc(char *str, int len);
@@ -203,7 +204,7 @@ bool distribution(FILE *sourceFile)
 		return false;
 	}
 
-	int maxLine = 100; // for test max num
+	int maxLine = MAX_LINE; // for test max num
 	size_t len = 0;
 	ssize_t read = 0;
 	char *line = NULL;
@@ -218,12 +219,22 @@ bool distribution(FILE *sourceFile)
 		}
 		/* the string will be discarded if there is no file for it*/
 		/// reduce calc
-		maxLine--;
+//		maxLine--;
 	}
 
+		
+	// clear up
+	map<int,FILE*> :: iterator iter = hashFile.begin();
+	while(iter != hashFile.end())
+	{
+		fclose(iter->second) ;
+		iter++;
+	}
 	hashFile.clear();
+
 	return true;	
 }
+
 
 /*
 * get a file description in map, if it does not exist, create one.
@@ -246,7 +257,11 @@ FILE *getFileDescriptionFromHashTable( map<int, FILE*> *pHashFileMap , int key)
 			if (pHashFileMap->size() < MAX_FILE_DESCRIPTION	)
 			{
 				ret = fopen(createFileName("hash",strlen("hash"), key), "a+");
-				if (NULL == ret)
+				if (NULL != ret)
+				{
+					pHashFileMap->insert(pair<int,FILE*>(key,ret));
+				}
+				else	
 				{
 					cout << "create file failed" << endl;
 				}
