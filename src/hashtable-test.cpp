@@ -15,7 +15,7 @@ using namespace __gnu_cxx;
 #define MAX_STRING_LEN 52
 
 int hashFunc(char *str, int len);
-char *createFileName(char *str, int strLen, int num);
+char *createFileName(const char *str, int strLen, int num);
 
 int getRandom(int base)
 {
@@ -162,13 +162,13 @@ int hashFunc(char *str, int len)
 	return  sum;
 }
 
-char *createFileName(char *str, int strLen, int num)
+char *createFileName(const char *str, int strLen, int num)
 {
 	static char name[MAX_STRING_LEN] = {};
 	if (NULL != str && strLen > 0)
 	{
 		strncpy(name,str,strLen);
-		snprintf(&name[strLen], 5,"%d", num );
+		sprintf(&name[strLen], "%d", num );
 	}
 
 	return name;
