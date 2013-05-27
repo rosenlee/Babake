@@ -1,0 +1,6 @@
+1, how to build the project using mysql API in C/C++?
+2, how to use mysql API£¿
+3£¬how to use mysql API insert into statement?
+4, how to use mysql API select statement and check the result?
+	25.2.3.66. mysql_store_result()
+5, how to use the mysql prepare statement API ?

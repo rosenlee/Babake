@@ -6,6 +6,9 @@
 #include <mysql/mysql.h>
 #include <string.h>
 
+#define INSERT_QUERY "INSERT INTO test_table(name, sex) VALUES(?,?)"
+#define MAX_STRING  128
+
 using namespace std;
 
 MYSQL DbObj; //handle
@@ -15,8 +18,23 @@ MYSQL_ROW sqlrow; //rows
 void mysql_hex_string_test(MYSQL *mysql);
 void mysql_select(MYSQL *mysql);
 
+int mysql_stmt_api_test(MYSQL *mysql);
+int mysql_api_test(void);
+int mysqlConnect(void);
 
 int main()
+{
+
+	mysqlConnect();
+
+	mysql_stmt_api_test(&DbObj);
+
+
+	mysql_close(&DbObj);
+	return 0; 
+}
+
+int mysqlConnect(void)
 {
 	char tmp[255];
 	mysql_init(&DbObj);
@@ -33,9 +51,13 @@ int main()
 	cout << "get server version :" << ret << endl;
 	cout << "character set: " <<  mysql_character_set_name(&DbObj) << endl;
 //	mysql_hex_string_test(&DbObj);
+	return 0;
+}
+
+int mysql_api_test()
+{
 	mysql_select(&DbObj);
 
-	mysql_close(&DbObj);
 
 	return 0;
 }
@@ -125,4 +147,89 @@ void mysql_select(MYSQL *mysql)
 		/*clean up*/
 		mysql_free_result(result);
 	}
+}
+
+/* use statement api */
+
+int mysql_stmt_api_test(MYSQL *mysql)
+{
+
+		MYSQL_STMT  *stmt;
+		MYSQL_BIND  bind[2];
+
+		unsigned long nameLength;
+		unsigned long sexLength;
+		char name[MAX_STRING] = "stmt_insert";
+		char sex = 'y';
+/*
+		if (mysql_query(mysql, INSERT_QUERY))
+		{
+				fprintf(stderr, "insert query failed: %s\n", mysql_error(mysql));
+				exit(0);
+		}
+		*/
+		if(NULL == mysql)
+		{
+				return 0;
+		}
+		cout << "start use mysql stmt  api ..." << endl;
+
+		/* init */
+	    stmt = mysql_stmt_init(mysql);	
+		if(!stmt)
+		{
+				fprintf(stderr, "mysql_stmt_init(), out of memory\n");
+				exit(0);
+		}
+
+
+		/*prepare*/
+		if(mysql_stmt_prepare(stmt, INSERT_QUERY, strlen(INSERT_QUERY)))
+		{
+				fprintf(stderr, "\n mysql_stmt_prepare(), INSERT failed\n");
+				fprintf(stderr, " %s\n", mysql_stmt_error(stmt));
+				exit(0);
+		}
+
+		/* set the parameters data */
+		memset(bind, 0, sizeof(bind));
+		bind[0].buffer_type = MYSQL_TYPE_VAR_STRING;
+		bind[0].buffer = name;
+		bind[0].length = &nameLength; /// this can not be 0 
+		bind[0].is_null = 0;
+
+		bind[1].buffer_type = MYSQL_TYPE_STRING;
+		bind[1].buffer = &sex;
+		bind[1].length = &sexLength; // this can not be 0
+		bind[1].is_null = 0;
+
+		if(mysql_stmt_bind_param(stmt, bind))
+		{
+				fprintf(stderr, "mysql stmt bind param() failed:%s\n",mysql_stmt_error(stmt));
+				exit(0);
+		}
+
+		/*set the length of data*/
+		nameLength = strlen(name);
+		sexLength = 1;
+
+		/* execute command : insert */
+		if(mysql_stmt_execute(stmt))
+		{
+				fprintf(stderr, "mysql stmt execute() failed:%s\n",mysql_stmt_error(stmt));
+				exit(0);
+
+		}
+
+		cout << "mysql stmt execute success!" << endl;
+
+
+		/* clean up */
+		if(mysql_stmt_close(stmt))
+		{
+				cerr << "mysql stmt close error " << mysql_stmt_error(stmt) << endl;
+		}
+
+
+		return 0; 
 }
