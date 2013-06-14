@@ -62,10 +62,14 @@ void MakeHeap(vector<int> &heapVect )
 	cout << "heap size: " << hsize << endl;
 
 	// make the little-top heap
-	for(int index = hsize/2; index > 0; index --) 
+	for(int index = hsize/2-1; index >= 0; index --) 
 	{
-		HeapAdjust(heapVect, index , hsize);	
+		HeapAdjust(heapVect, index , hsize-1);	
 	}
+
+	cout << endl ;
+	copy(heapVect.begin(), heapVect.end(), ostream_iterator<int>(cout, " "));
+	cout << endl;
 
 	for(int pos = hsize -1; pos >=0; pos-- )
 	{
