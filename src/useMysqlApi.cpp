@@ -18,6 +18,9 @@ MYSQL_ROW sqlrow; //rows
 void mysql_hex_string_test(MYSQL *mysql);
 void mysql_select(MYSQL *mysql);
 
+void mysql_format_display(MYSQL_RES  *result);
+
+int mysql_multi_query(MYSQL *mysql);
 int mysql_stmt_api_test(MYSQL *mysql);
 int mysql_api_test(void);
 int mysqlConnect(void);
@@ -27,8 +30,14 @@ int main()
 
 	mysqlConnect();
 
-	mysql_stmt_api_test(&DbObj);
+	/* test 1 */
+	//mysql_stmt_api_test(&DbObj);
 
+	/* display */
+	//mysql_api_test();
+
+	/* test 2 */
+	mysql_multi_query(&DbObj);
 
 	mysql_close(&DbObj);
 	return 0; 
@@ -38,7 +47,7 @@ int mysqlConnect(void)
 {
 	char tmp[255];
 	mysql_init(&DbObj);
-	if(!mysql_real_connect(&DbObj, "localhost", "root", "admin", "testdb", 0, NULL, 0))
+	if(!mysql_real_connect(&DbObj, "localhost", "root", "admin", "testdb", 0, NULL, CLIENT_MULTI_STATEMENTS))
 	{
 		cout << "mysql real connect error" << mysql_error(&DbObj) <<endl; 
 		return 0;
@@ -115,17 +124,29 @@ void mysql_select(MYSQL *mysql)
 	}
 	else
 	{
-	/*fetch field */
-	MYSQL_FIELD *field;
+		/*fetch field */
+		MYSQL_FIELD *field;
 
 	while((field = mysql_fetch_field(result)))
 	{
 		cout << "field name : " << field->name << endl; 
 	}
+
+	mysql_format_display(result);
+
+		/*clean up*/
+	mysql_free_result(result);
+
+	}
+}
+
+void mysql_format_display(MYSQL_RES *result)
+{
+
 		/* fetch row */
-		MYSQL_ROW row;
-		unsigned int num_fields; // number of fields in each row
-		unsigned int i;	
+	MYSQL_ROW row;
+	unsigned int num_fields; // number of fields in each row
+	unsigned int i;	
 
 		num_fields = mysql_num_fields(result);	
 		cout << "number of fields: " << num_fields << endl; 
@@ -144,9 +165,6 @@ void mysql_select(MYSQL *mysql)
 			cout << endl;			
 		}
 
-		/*clean up*/
-		mysql_free_result(result);
-	}
 }
 
 /* use statement api */
@@ -232,4 +250,45 @@ int mysql_stmt_api_test(MYSQL *mysql)
 
 
 		return 0; 
+}
+
+
+int mysql_multi_query(MYSQL *mysql)
+{
+	char multiQueryStr[] = "DROP TABLE IF EXISTS multi_query;"
+							"CREATE TABLE multi_query(id INT);"
+							"INSERT INTO multi_query VALUES(10);"
+							"UPDATE multi_query SET id=21 WHERE id=10;"
+							"SELECT * FROM multi_query";
+							/*"DROP TABLE multi_query";*/ /*note: the last charactor is not ; */
+
+	if (NULL != mysql)
+	{
+		/*do multi query */
+		if ( 0 != mysql_query(mysql, multiQueryStr))
+		{
+			cerr << mysql_error(mysql) << endl;
+			exit(1);		
+		}
+
+
+		MYSQL_RES  *result;
+		do
+		{
+			/* Process all results */
+			cout << "total affected rows: " << mysql_affected_rows(mysql) << endl;
+
+			if(! (result = mysql_store_result(mysql)))
+			{
+				cerr << "Got fatal error processing query " << mysql_error(mysql) << endl;
+				exit(1);
+			}
+
+			mysql_format_display(result);
+			mysql_free_result(result);
+
+		}while(!mysql_next_result(mysql));
+	}
+	/**/
+	return 0;
 }
