@@ -261,6 +261,7 @@ int mysql_multi_query(MYSQL *mysql)
 							"UPDATE multi_query SET id=21 WHERE id=10;"
 							"SELECT * FROM multi_query";
 							/*"DROP TABLE multi_query";*/ /*note: the last charactor is not ; */
+	char selectStatement[] = "SELECT * FROM multi_query";
 
 	if (NULL != mysql)
 	{
@@ -271,14 +272,22 @@ int mysql_multi_query(MYSQL *mysql)
 			exit(1);		
 		}
 
+		/*
+	   if(0 != 	mysql_query(mysql, selectStatement))
+	   { 
+			cerr << mysql_error(mysql) << endl;
+			exit(1);		
+	   }
 
+	   */
+		cout << mysql_info(mysql) << endl;
 		MYSQL_RES  *result;
 		do
 		{
 			/* Process all results */
 			cout << "total affected rows: " << mysql_affected_rows(mysql) << endl;
 
-			if(! (result = mysql_store_result(mysql)))
+			if(NULL ==  (result = mysql_store_result(mysql)))
 			{
 				cerr << "Got fatal error processing query " << mysql_error(mysql) << endl;
 				exit(1);

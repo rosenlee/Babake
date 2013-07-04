@@ -64,7 +64,7 @@ void MakeHeap(vector<int> &heapVect )
 	// make the little-top heap
 	for(int index = (hsize-1)/2; index >= 0; index --) 
 	{
-		HeapAdjust(heapVect, index , hsize-1);	
+		HeapAdjust(heapVect, index , hsize);	
 	}
 
 	cout << endl ;
