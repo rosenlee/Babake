@@ -21,14 +21,20 @@ public:
 
 private:
 	CBuffer(const CBuffer &cbuf);
-	bool loop;
-	inline bool canWrite(void){ return (!loop && pWrite >= pRead) || (loop && pWrite < pRead); }
-	inline bool canRead(void){ return /*(pWrite != pRead);*/ (0 != *pRead);}
+	int readPos, writePos;
+	static const char READ = 1;
+	static const char UNREAD = 0;
+	static const char WRITE = 1;
+	static const char UNWRITE = 0;
+	inline bool canRead(void){ return (WRITE == *(pWrite + readPos/lineSize));}
+	inline bool canWrite(void){ return (READ == *(pRead + writePos/lineSize));}
+	inline void setRead(int pos) { if(pRead){*(pRead + pos/lineSize) = READ;}}
+	inline void setWrite(int pos) { if(pWrite){*(pWrite + pos/lineSize) = WRITE;}}
 	static	const int defBufLine = 128;
 	int   lineSize; 
-	char  *pBuf;
-	char  *pRead;
-	char  *pWrite;
+	char  *pBuf;  	// data buffer
+	char  *pRead; 	// record read pos state 
+	char  *pWrite; 	// record write pos state
 	char  *pEnd;
 };
 

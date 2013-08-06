@@ -25,11 +25,11 @@ $(TARGET) :
 
 heap:heap.cpp
 	$(CC) $(CFLAG) $(INCLUDE) $(LIB) -o $@ $^
-	cp heap $(TARGET)/
+	mv heap $(TARGET)/
 
 multis:multiThreads.cpp
 	$(CC) $(CFLAG) $(INCLUDE) $(LIB) -o $@ $^
-	cp multis $(TARGET)/
+	mv multis $(TARGET)/
 
 
 clean:

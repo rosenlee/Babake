@@ -27,14 +27,34 @@ CBuffer::CBuffer(int bufSize)
 */
 
 	int total = bufSize * defBufLine;
-	pBuf = (char*)malloc(total);	
+	pBuf = (char*)malloc(total*sizeof(char));	
 	if(pBuf)
 	{
 		memset(pBuf, 0x00, total);
 		lineSize = bufSize;
-		pRead = pWrite = pBuf;
 		pEnd = pBuf + total;
 	}
+
+	pRead = (char*)malloc(sizeof(char)*defBufLine);
+	if(pRead)
+	{ 
+		memset(pRead, READ, sizeof(char)*defBufLine);
+	}
+	else
+	{
+		multiError("constructor failed, malloc fail!");		
+	}
+
+	pWrite = (char*)malloc(sizeof(char)*defBufLine);
+	if(pWrite)
+	{
+		memset(pWrite, UNWRITE, sizeof(char)*defBufLine);
+	}
+	else
+	{
+		multiError("constructor failed, malloc fail!");		
+	}
+	readPos = writePos = 0;
 }
 
 CBuffer::~CBuffer()
@@ -53,22 +73,14 @@ int CBuffer::read(char *buf, int bufSize)
 	if(canRead())
 	{
 		int len = bufSize > lineSize? lineSize : bufSize;
-		memcpy(buf, pRead, len);
+		memcpy(buf, pBuf + readPos, len);
 		buf[len-1] = 0;
 
+		setRead(readPos);
 		//cout << "read pointer " << hex << (int)pRead << endl;
 		// sign it is read
-		*pRead = 0;
 
-		if(pEnd == pRead)
-		{
-			pRead = pBuf; // return to head 
-			loop = false;
-		}
-		else
-		{
-			pRead += lineSize;
-		}	
+		readPos = (readPos + lineSize) % lineSize;
 		retVal = len;
 	}
 	return retVal;
@@ -80,18 +92,11 @@ int CBuffer::write(const char *buf, int bufSize)
 	if(canWrite())
 	{
 		int len = bufSize > lineSize? lineSize : bufSize;
-		if(pEnd  == pWrite)
-		{
-			pWrite = pBuf;
-			loop = true;	
-			memcpy(pWrite, buf, len);	
-		}
-		else
-		{ 
-			memcpy(pWrite, buf, len);	
-		}
-		cout << "write pointer " << hex << (int)pWrite << endl;
-		pWrite += len;
+		memcpy(pBuf + writePos, buf, len);
+		setWrite(writePos);
+		writePos = (writePos + lineSize) % lineSize;
+
+		//cout << "write pointer " << hex << (int)pWrite << endl;
 		retVal = len;
 		
 	}
@@ -172,6 +177,7 @@ static void *readThread(void *arg)
 
 
 	cout << "read thread exit" << endl;
+	return 0;
 }
 
 
@@ -211,6 +217,7 @@ static void *writeThread(void *arg)
 
 	cout << "write thread exit" << endl;
 
+	return 0;
 
 }
 
