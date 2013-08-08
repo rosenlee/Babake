@@ -156,8 +156,8 @@ static void *readThread(void *arg)
 		cout << "create read thread now..."	<< endl;
 	}	
 
-//	const int bufLen = CBuffer::defLineSize;
-	const int bufLen = 64;
+	const int bufLen = CBuffer::defLineSize;
+//	const int bufLen = 64;
 	char	buf[bufLen] = {0}; 
 	while(1)	
 	{
@@ -190,9 +190,9 @@ static void *writeThread(void *arg)
 		cout << "create read thread now..."	<< endl;
 	}	
 
-	//const int bufLen = CBuffer::defLineSize;
+	const int bufLen = CBuffer::defLineSize;
 
-	const int bufLen = 64;
+	//const int bufLen = 64;
 	char	buf[bufLen] = {0}; 
 	int		cnt = 0;
 	while(1)	

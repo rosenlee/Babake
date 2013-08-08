@@ -16,12 +16,15 @@ TARGET := bin
 
 .PHONY: all clean
 
-all: $(TARGET) heap multis 
+all: $(TARGET)  btree heap multis 
 
 $(TARGET) : 
 	@if [ ! -r $(TARGET) ] ; then mkdir -p $(TARGET) ; fi
 			
 
+btree:btree.cpp
+	$(CC) $(CFLAG) $(INCLUDE) $(LIB) -o $@ $^
+	mv btree $(TARGET)/
 
 heap:heap.cpp
 	$(CC) $(CFLAG) $(INCLUDE) $(LIB) -o $@ $^
